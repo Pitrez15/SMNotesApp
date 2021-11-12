@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "978235127754",
+    "project_id": "smnotestest",
+    "storage_bucket": "smnotestest.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:978235127754:android:182173389072d05305c133",
+        "android_client_info": {
+          "package_name": "com.jp.smnotestest"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "978235127754-5tmkg7ftk6u87p5j2pcctchkvvi3h94r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBOKpE76Eqw-N9GnS9pt22YOjE0GvFkzc8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "978235127754-5tmkg7ftk6u87p5j2pcctchkvvi3h94r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
