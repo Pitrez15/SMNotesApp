@@ -14,6 +14,7 @@ import com.jp.smnotestest.databinding.FragmentLoginBinding
 import com.jp.smnotestest.databinding.FragmentRegisterBinding
 import com.jp.smnotestest.ui.MainActivity
 import com.jp.smnotestest.ui.viewmodels.AuthViewModel
+import com.jp.smnotestest.utils.ResultHelper
 
 class RegisterFragment : Fragment() {
 
@@ -32,18 +33,6 @@ class RegisterFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        authViewModel.currentUser.observe(viewLifecycleOwner, Observer { currentUser ->
-            if (currentUser == null) {
-                Toast.makeText(requireContext(), "Registration Failed", Toast.LENGTH_SHORT).show()
-            }
-            else {
-                Toast.makeText(requireContext(), "Registration Completed", Toast.LENGTH_SHORT).show()
-                val intent = Intent(requireContext(), MainActivity::class.java)
-                startActivity(intent)
-                activity?.finish()
-            }
-        })
 
         binding.btnRegister.setOnClickListener {
             if (binding.etRegisterName.editText?.text.isNullOrBlank()) {
@@ -65,10 +54,29 @@ class RegisterFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            authViewModel.register(
+            register(
                 binding.etRegisterEmail.editText?.text.toString(),
                 binding.etRegisterPassword.editText?.text.toString()
             )
         }
+    }
+
+    private fun register(email: String, password: String) {
+        authViewModel.register(email, password)
+        authViewModel.registrationStatus.observe(viewLifecycleOwner, { result ->
+            result?.let {
+                when (it) {
+                    is ResultHelper.Success -> {
+                        Toast.makeText(requireContext(), "Registration Completed.", Toast.LENGTH_SHORT).show()
+                        val intent = Intent(requireContext(), MainActivity::class.java)
+                        startActivity(intent)
+                        activity?.finish()
+                    }
+                    is ResultHelper.Error -> {
+                        Toast.makeText(requireContext(), "Registration Failed.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        })
     }
 }

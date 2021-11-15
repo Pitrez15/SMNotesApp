@@ -4,18 +4,17 @@ import android.view.View
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.ui.setupWithNavController
 import com.jp.smnotestest.R
 import com.jp.smnotestest.databinding.ActivityMainBinding
 import com.jp.smnotestest.ui.viewmodels.AuthViewModel
 import com.jp.smnotestest.ui.viewmodels.MainViewModel
+import com.jp.smnotestest.utils.ResultHelper
 
 class MainActivity : AppCompatActivity() {
 
@@ -28,10 +27,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.mainBottomNavigationView.background = null
-
         val mainNavHostFragment = supportFragmentManager.findFragmentById(R.id.mainNavHostFragment) as NavHostFragment
-        binding.mainBottomNavigationView.setupWithNavController(mainNavHostFragment.findNavController())
         mainNavHostFragment.findNavController().addOnDestinationChangedListener { c, destination, a ->
             when (destination.id) {
                 R.id.createNoteFragment -> {
@@ -42,6 +38,9 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        /*binding.mainBottomNavigationView.background = null
+        binding.mainBottomNavigationView.setupWithNavController(mainNavHostFragment.findNavController())*/
 
         binding.mainFabNewNote.setOnClickListener {
             mainNavHostFragment.findNavController().navigate(R.id.createNoteFragment)
@@ -56,18 +55,28 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.logout -> {
-                authViewModel.logout()
-                authViewModel.currentUser.observe(this, Observer { currentUser ->
-                    if (currentUser == null) {
-                        Toast.makeText(this, "Logout Completed", Toast.LENGTH_SHORT).show()
-                        val intent = Intent(this, AuthActivity::class.java)
-                        startActivity(intent)
-                        finish()
-                    }
-                })
+                signOut()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun signOut() {
+        authViewModel.signOut()
+        authViewModel.signOutStatus.observe(this, { result ->
+            result?.let {
+                when (it) {
+                    is ResultHelper.Success -> {
+                        val intent = Intent(this, AuthActivity::class.java)
+                        startActivity(intent)
+                        finish()
+                    }
+                    is ResultHelper.Error -> {
+                        Log.d("auth", "SignOut not Successful")
+                    }
+                }
+            }
+        })
     }
 }

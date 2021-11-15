@@ -38,14 +38,10 @@ class CompletedFragment : Fragment() {
                 val bundle = Bundle().apply {
                     putParcelable("note", item)
                 }
-                findNavController().navigate(
+                /*findNavController().navigate(
                     R.id.action_completedFragment_to_createNoteFragment,
                     bundle
-                )
-            }
-
-            override fun onChangeItemCompleteSwitchClicked(item: Note) {
-                mainViewModel.completeNote(item)
+                )*/
             }
 
             override fun onDeleteNoteClicked(item: Note) {
@@ -69,7 +65,7 @@ class CompletedFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        mainViewModel.getCompletedNotes()
+        /*mainViewModel.getCompletedNotes()
 
         mainViewModel.notesCompleted.observe(viewLifecycleOwner, Observer { notes ->
             if (notes.isNullOrEmpty()) {
@@ -81,6 +77,6 @@ class CompletedFragment : Fragment() {
                 binding.rvCompleted.visibility = View.VISIBLE
                 notesAdapter.differ.submitList(notes.filter { note -> note.deleted != 1 })
             }
-        })
+        })*/
     }
 }

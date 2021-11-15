@@ -46,9 +46,9 @@ class NotesAdapter(
                 noteListener.onItemClicked(note)
             }
 
-            if (note.completed == 1) {
-                ivNoteCompleted.visibility = View.VISIBLE
-            }
+//            if (note.completed == 1) {
+//                ivNoteCompleted.visibility = View.VISIBLE
+//            }
 
             btnNoteDelete.setOnClickListener {
                 noteListener.onDeleteNoteClicked(note)

@@ -10,8 +10,8 @@
         android:id="@+id/placeholder"
         android:title=""/>
 
-    <item android:id="@+id/completedFragment"
-        android:title="Completed"
-        android:icon="@drawable/ic_completed"/>
+    <item android:id="@+id/settingsFragment"
+        android:title="Settings"
+        android:icon="@drawable/ic_settings"/>
 
 </menu>

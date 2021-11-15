@@ -14,7 +14,7 @@
         android:name="androidx.navigation.fragment.NavHostFragment"
         app:defaultNavHost="true"
         app:navGraph="@navigation/main_nav_graph"
-        app:layout_constraintBottom_toTopOf="@+id/bottomBarContainer"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -38,14 +38,14 @@
             app:fabCradleMargin="10dp"
             app:fabCradleRoundedCornerRadius="10dp" >
 
-            <com.google.android.material.bottomnavigation.BottomNavigationView
+            <!--<com.google.android.material.bottomnavigation.BottomNavigationView
                 android:id="@+id/mainBottomNavigationView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginEnd="16dp"
                 android:background="@color/transparent"
                 style="@style/Widget.MaterialComponents.BottomNavigationView.Colored"
-                app:menu="@menu/bottom_nav_main_menu" />
+                app:menu="@menu/bottom_nav_main_menu" />-->
 
         </com.google.android.material.bottomappbar.BottomAppBar>
 

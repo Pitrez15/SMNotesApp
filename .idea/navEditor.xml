@@ -54,27 +54,6 @@
             <LayoutPositions>
               <option name="myPositions">
                 <map>
-                  <entry key="completedFragment">
-                    <value>
-                      <LayoutPositions>
-                        <option name="myPosition">
-                          <Point>
-                            <option name="x" value="56" />
-                            <option name="y" value="-222" />
-                          </Point>
-                        </option>
-                        <option name="myPositions">
-                          <map>
-                            <entry key="action_completedFragment_to_createNoteFragment">
-                              <value>
-                                <LayoutPositions />
-                              </value>
-                            </entry>
-                          </map>
-                        </option>
-                      </LayoutPositions>
-                    </value>
-                  </entry>
                   <entry key="createNoteFragment">
                     <value>
                       <LayoutPositions>
@@ -86,11 +65,6 @@
                         </option>
                         <option name="myPositions">
                           <map>
-                            <entry key="action_createNoteFragment_to_completedFragment">
-                              <value>
-                                <LayoutPositions />
-                              </value>
-                            </entry>
                             <entry key="action_createNoteFragment_to_notesFragment">
                               <value>
                                 <LayoutPositions />
@@ -106,8 +80,8 @@
                       <LayoutPositions>
                         <option name="myPosition">
                           <Point>
-                            <option name="x" value="57" />
-                            <option name="y" value="129" />
+                            <option name="x" value="49" />
+                            <option name="y" value="-58" />
                           </Point>
                         </option>
                         <option name="myPositions">

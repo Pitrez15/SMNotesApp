@@ -1,8 +1,7 @@
 package com.jp.smnotestest.ui.fragments
 
-import android.content.DialogInterface
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -15,6 +14,7 @@ import com.jp.smnotestest.R
 import com.jp.smnotestest.databinding.FragmentCreateNoteBinding
 import com.jp.smnotestest.models.Note
 import com.jp.smnotestest.ui.viewmodels.MainViewModel
+import com.jp.smnotestest.utils.ResultHelper
 import java.text.SimpleDateFormat
 
 class CreateNoteFragment : Fragment() {
@@ -39,7 +39,7 @@ class CreateNoteFragment : Fragment() {
             note = it
             editMode = true
             binding.llCreateDate.visibility = View.VISIBLE
-            binding.llCreateComplete.visibility = View.VISIBLE
+            binding.llCreateShare.visibility = View.VISIBLE
 
             binding.etCreateTitle.editText?.setText(it.title)
             binding.etCreateDescription.editText?.setText(it.description)
@@ -47,12 +47,6 @@ class CreateNoteFragment : Fragment() {
             val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
             val convertedDate = sdf.parse(it.createdAt!!)
             binding.tvCreateDate.text = SimpleDateFormat("dd-MM-yyyy").format(convertedDate)
-            if (it.completed == 1) {
-                binding.tvCreateComplete.text = "Completed"
-                binding.ivCreateComplete.setColorFilter(R.color.primary)
-            }
-        }.run {
-            Log.d("args", args.toString())
         }
 
         return binding.root
@@ -61,9 +55,17 @@ class CreateNoteFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.llCreateComplete.setOnClickListener{
+        binding.llCreateShare.setOnClickListener{
             note?.let {
-                mainViewModel.completeNote(it)
+                val shareIntent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_TEXT, "${it.title}:\n${it.description}")
+                    type = "text/plain"
+                }
+                val intent = Intent.createChooser(shareIntent, null)
+                startActivity(intent)
+
+                /*mainViewModel.completeNote(it)
                 if (it.completed == 0) {
                     binding.tvCreateComplete.text = "Completed"
                     binding.ivCreateComplete.setColorFilter(R.color.primary)
@@ -73,7 +75,7 @@ class CreateNoteFragment : Fragment() {
                     binding.tvCreateComplete.text = "Complete"
                     binding.ivCreateComplete.colorFilter = null
                     it.completed = 0
-                }
+                }*/
             }
         }
 
@@ -93,15 +95,11 @@ class CreateNoteFragment : Fragment() {
                     return@setOnClickListener
                 }
 
-                mainViewModel.updateNote(
+                updateNote(
                     note?.id!!,
                     binding.etCreateTitle.editText?.text.toString(),
                     binding.etCreateDescription.editText?.text.toString()
-                ).invokeOnCompletion {
-                    Toast.makeText(requireContext(), "Note Updated", Toast.LENGTH_SHORT).show()
-                    note?.title = binding.etCreateTitle.editText?.text.toString()
-                    note?.description = binding.etCreateDescription.editText?.text.toString()
-                }
+                )
             }
             else {
                 if (binding.etCreateTitle.editText?.text.isNullOrBlank()) {
@@ -113,14 +111,46 @@ class CreateNoteFragment : Fragment() {
                     return@setOnClickListener
                 }
 
-                mainViewModel.createNote(
+                createNote(
                     binding.etCreateTitle.editText?.text.toString(),
                     binding.etCreateDescription.editText?.text.toString()
-                ).invokeOnCompletion {
-                    Toast.makeText(requireContext(), "Note Created", Toast.LENGTH_SHORT).show()
-                    findNavController().navigate(R.id.action_createNoteFragment_to_notesFragment)
-                }
+                )
             }
         }
+    }
+
+    private fun updateNote(id: Int, title: String, description: String) {
+        mainViewModel.updateNote(id, title, description)
+        mainViewModel.updateNoteStatus.observe(viewLifecycleOwner, { result ->
+            result?.let {
+                when (it) {
+                    is ResultHelper.Success -> {
+                        Toast.makeText(requireContext(), "Note updated.", Toast.LENGTH_SHORT).show()
+                        note?.title = title
+                        note?.description = description
+                    }
+                    is ResultHelper.Error -> {
+                        Toast.makeText(requireContext(), "Note was not updated.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        })
+    }
+
+    private fun createNote(title: String, description: String) {
+        mainViewModel.createNote(title, description)
+        mainViewModel.createStatus.observe(viewLifecycleOwner, { result ->
+            result?.let {
+                when (it) {
+                    is ResultHelper.Success -> {
+                        Toast.makeText(requireContext(), "Note created.", Toast.LENGTH_SHORT).show()
+                        findNavController().navigate(R.id.action_createNoteFragment_to_notesFragment)
+                    }
+                    is ResultHelper.Error -> {
+                        Toast.makeText(requireContext(), "Note was not created.", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        })
     }
 }

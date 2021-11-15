@@ -16,15 +16,6 @@
             app:destination="@id/createNoteFragment" />
     </fragment>
     <fragment
-        android:id="@+id/completedFragment"
-        android:name="com.jp.smnotestest.ui.fragments.CompletedFragment"
-        android:label="fragment_completed"
-        tools:layout="@layout/fragment_completed" >
-        <action
-            android:id="@+id/action_completedFragment_to_createNoteFragment"
-            app:destination="@id/createNoteFragment" />
-    </fragment>
-    <fragment
         android:id="@+id/createNoteFragment"
         android:name="com.jp.smnotestest.ui.fragments.CreateNoteFragment"
         android:label="fragment_create_note"
@@ -32,9 +23,6 @@
         <action
             android:id="@+id/action_createNoteFragment_to_notesFragment"
             app:destination="@id/notesFragment" />
-        <action
-            android:id="@+id/action_createNoteFragment_to_completedFragment"
-            app:destination="@id/completedFragment" />
         <argument
             android:name="note"
             app:argType="com.jp.smnotestest.models.Note"

@@ -2,26 +2,24 @@ package com.jp.smnotestest.ui.fragments
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
-import androidx.navigation.fragment.findNavController
-import com.jp.smnotestest.R
 import com.jp.smnotestest.databinding.FragmentLoginBinding
-import com.jp.smnotestest.databinding.FragmentSplashScreenBinding
 import com.jp.smnotestest.ui.MainActivity
 import com.jp.smnotestest.ui.viewmodels.AuthViewModel
+import com.jp.smnotestest.utils.ResultHelper
 
 class LoginFragment : Fragment() {
 
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
 
-    val authViewModel: AuthViewModel by viewModels()
+    private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,30 +35,40 @@ class LoginFragment : Fragment() {
 
         binding.btnLogin.setOnClickListener {
             if (binding.etLoginEmail.editText?.text.isNullOrBlank()) {
-                Toast.makeText(requireContext(), "Invalid Email", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Invalid Email.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             if (binding.etLoginPassword.editText?.text.isNullOrBlank()) {
-                Toast.makeText(requireContext(), "Invalid Password", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Invalid Password.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            authViewModel.login(
+            login(
                 binding.etLoginEmail.editText?.text.toString(),
                 binding.etLoginPassword.editText?.text.toString()
             )
-
-            authViewModel.currentUser.observe(viewLifecycleOwner, Observer { currentUser ->
-                if (currentUser == null) {
-                    Toast.makeText(requireContext(), "Login Failed", Toast.LENGTH_SHORT).show()
-                }
-                else {
-                    Toast.makeText(requireContext(), "Login Completed", Toast.LENGTH_SHORT).show()
-                    val intent = Intent(requireContext(), MainActivity::class.java)
-                    startActivity(intent)
-                    activity?.finish()
-                }
-            })
         }
+    }
+
+    private fun login(email: String, password: String) {
+        authViewModel.login(email, password)
+        authViewModel.signInStatus.observe(viewLifecycleOwner, { result ->
+            result?.let {
+                when (it) {
+                    is ResultHelper.Success -> {
+                        Toast.makeText(requireContext(), "Login Completed.", Toast.LENGTH_SHORT).show()
+                        val intent = Intent(requireContext(), MainActivity::class.java)
+                        startActivity(intent)
+                        activity?.finish()
+                    }
+                    is ResultHelper.Error -> {
+                        if (it.message != "Reset") {
+                            Toast.makeText(requireContext(), "Login Failed.", Toast.LENGTH_SHORT).show()
+                        }
+                        authViewModel.resetSignInLiveData()
+                    }
+                }
+            }
+        })
     }
 }

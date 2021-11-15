@@ -83,7 +83,7 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/llCreateComplete"
+            android:id="@+id/llCreateShare"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
@@ -94,17 +94,19 @@
             app:layout_constraintTop_toBottomOf="@+id/etCreateDescription">
 
             <TextView
-                android:id="@+id/tvCreateComplete"
+                android:id="@+id/tvCreateShare"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
-                android:text="Complete" />
+                android:text="Share"
+                android:textColor="@color/primary"/>
 
             <ImageView
-                android:id="@+id/ivCreateComplete"
+                android:id="@+id/ivCreateShare"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/ic_completed" />
+                android:src="@drawable/ic_share"
+                app:tint="@color/primary" />
 
         </LinearLayout>
 

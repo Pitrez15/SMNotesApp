@@ -5,8 +5,8 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,6 +16,7 @@ import com.jp.smnotestest.databinding.FragmentNotesBinding
 import com.jp.smnotestest.models.Note
 import com.jp.smnotestest.ui.viewmodels.MainViewModel
 import com.jp.smnotestest.utils.NoteListener
+import com.jp.smnotestest.utils.ResultHelper
 
 class NotesFragment : Fragment() {
 
@@ -44,12 +45,20 @@ class NotesFragment : Fragment() {
                 )
             }
 
-            override fun onChangeItemCompleteSwitchClicked(item: Note) {
-                mainViewModel.completeNote(item)
-            }
-
             override fun onDeleteNoteClicked(item: Note) {
                 mainViewModel.deleteNote(item)
+                mainViewModel.deleteNoteStatus.observe(viewLifecycleOwner, { result ->
+                    result?.let {
+                        when (it) {
+                            is ResultHelper.Success -> {
+                                Toast.makeText(requireContext(), "Note deleted.", Toast.LENGTH_SHORT).show()
+                            }
+                            is ResultHelper.Error -> {
+                                Toast.makeText(requireContext(), "Note was not deleted.", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                })
             }
         })
 
@@ -68,15 +77,19 @@ class NotesFragment : Fragment() {
 
         mainViewModel.getNotes()
 
-        mainViewModel.notes.observe(viewLifecycleOwner, Observer { notes ->
-            if (notes.isNullOrEmpty()) {
-                binding.tvNotesNoNotes.visibility = View.VISIBLE
-                binding.rvNotes.visibility = View.GONE
-            }
-            else {
-                binding.tvNotesNoNotes.visibility = View.GONE
-                binding.rvNotes.visibility = View.VISIBLE
-                notesAdapter.differ.submitList(notes.filter { note -> note.deleted != 1 })
+        mainViewModel.notes.observe(viewLifecycleOwner, { result ->
+            result?.let {
+                when (it) {
+                    is ResultHelper.Success -> {
+                        binding.tvNotesNoNotes.visibility = View.GONE
+                        binding.rvNotes.visibility = View.VISIBLE
+                        notesAdapter.differ.submitList(it.data?.filter { note -> note.deleted != 1 })
+                    }
+                    is ResultHelper.Error -> {
+                        binding.tvNotesNoNotes.visibility = View.VISIBLE
+                        binding.rvNotes.visibility = View.GONE
+                    }
+                }
             }
         })
     }
