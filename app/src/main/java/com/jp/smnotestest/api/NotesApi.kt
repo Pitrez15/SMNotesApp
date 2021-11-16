@@ -14,7 +14,7 @@ interface NotesApi {
     suspend fun getCompletedNotes(@Path("userId") userId: String): Response<NotesResponse>
 
     @POST("create")
-    suspend fun createNote(@Body note: Map<String, String>): Response<NotesResponse>
+    suspend fun createNote(@Body note: Map<String, String?>): Response<NotesResponse>
 
     @PUT("complete/{id}")
     suspend fun completeNote(@Path("id") id: Int, @Body body: Map<String, Boolean>): Response<NotesResponse>
@@ -23,5 +23,5 @@ interface NotesApi {
     suspend fun deleteNote(@Path("id") id: Int): Response<NotesResponse>
 
     @PUT("update/{id}")
-    suspend fun updateNote(@Path("id") id: Int, @Body note: Map<String, String>): Response<NotesResponse>
+    suspend fun updateNote(@Path("id") id: Int, @Body note: Map<String, String?>): Response<NotesResponse>
 }

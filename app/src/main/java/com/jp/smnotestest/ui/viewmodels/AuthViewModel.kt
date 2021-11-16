@@ -12,7 +12,7 @@ import com.jp.smnotestest.utils.ResultHelper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class AuthViewModel : ViewModel() {
+class AuthViewModel: ViewModel() {
 
     private var firebaseAuth: FirebaseAuth? = null
     var loading: MutableLiveData<Boolean> = MutableLiveData()

@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "978235127754-srmt79klvkpopp9dmso4fvj0a4ptg5ks.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jp.smnotestest",
+            "certificate_hash": "fa1098345bb216d6e9ce6c698872868fa2b5b402"
+          }
+        },
+        {
           "client_id": "978235127754-5tmkg7ftk6u87p5j2pcctchkvvi3h94r.apps.googleusercontent.com",
           "client_type": 3
         }

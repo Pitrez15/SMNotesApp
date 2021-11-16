@@ -56,13 +56,59 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <LinearLayout
+            android:id="@+id/llCreateAddAttachment"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="visible"
+            app:layout_constraintBottom_toTopOf="@+id/llCreateShare"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/etCreateDescription">
+
+            <TextView
+                android:id="@+id/tvCreateAddAttachment"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="Add Image"
+                android:textColor="@color/primary" />
+
+            <ImageView
+                android:id="@+id/ivCreateAddAttachment"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_image"
+                app:tint="@color/primary" />
+
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/ivCreateAttachment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:adjustViewBounds="true"
+            android:maxHeight="180dp"
+            android:scaleType="fitCenter"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@+id/llCreateShare"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/etCreateDescription" />
+
+        <LinearLayout
             android:id="@+id/llCreateDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:layout_marginTop="24dp"
+            app:layout_constraintBottom_toBottomOf="@+id/llCreateShare"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/etCreateDescription" >
+            app:layout_constraintTop_toTopOf="@+id/llCreateShare">
 
             <TextView
                 android:id="@+id/tvCreateDateTitle"
@@ -86,12 +132,11 @@
             android:id="@+id/llCreateShare"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/etCreateDescription">
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
             <TextView
                 android:id="@+id/tvCreateShare"
@@ -99,7 +144,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
                 android:text="Share"
-                android:textColor="@color/primary"/>
+                android:textColor="@color/primary" />
 
             <ImageView
                 android:id="@+id/ivCreateShare"

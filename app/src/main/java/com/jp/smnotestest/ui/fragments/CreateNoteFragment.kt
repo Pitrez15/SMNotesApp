@@ -1,15 +1,18 @@
 package com.jp.smnotestest.ui.fragments
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.bumptech.glide.Glide
 import com.jp.smnotestest.R
 import com.jp.smnotestest.databinding.FragmentCreateNoteBinding
 import com.jp.smnotestest.models.Note
@@ -27,6 +30,8 @@ class CreateNoteFragment : Fragment() {
     private val args: CreateNoteFragmentArgs? by navArgs()
     var note: Note? = null
     var editMode = false
+    var hasFile = false
+    var selectedUri: Uri? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,6 +45,12 @@ class CreateNoteFragment : Fragment() {
             editMode = true
             binding.llCreateDate.visibility = View.VISIBLE
             binding.llCreateShare.visibility = View.VISIBLE
+            if (!it.attachment.isNullOrEmpty()) {
+                hasFile = true
+                binding.llCreateAddAttachment.visibility = View.GONE
+                binding.ivCreateAttachment.visibility = View.VISIBLE
+                Glide.with(requireContext()).load(it.attachment).into(binding.ivCreateAttachment)
+            }
 
             binding.etCreateTitle.editText?.setText(it.title)
             binding.etCreateDescription.editText?.setText(it.description)
@@ -55,27 +66,19 @@ class CreateNoteFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.llCreateAddAttachment.setOnClickListener {
+            getAttachment()
+        }
+
         binding.llCreateShare.setOnClickListener{
             note?.let {
                 val shareIntent = Intent().apply {
                     action = Intent.ACTION_SEND
-                    putExtra(Intent.EXTRA_TEXT, "${it.title}:\n${it.description}")
+                    putExtra(Intent.EXTRA_TEXT, "${it.title}:\n${it.description}\n${it.attachment}")
                     type = "text/plain"
                 }
                 val intent = Intent.createChooser(shareIntent, null)
                 startActivity(intent)
-
-                /*mainViewModel.completeNote(it)
-                if (it.completed == 0) {
-                    binding.tvCreateComplete.text = "Completed"
-                    binding.ivCreateComplete.setColorFilter(R.color.primary)
-                    it.completed = 1
-                }
-                else {
-                    binding.tvCreateComplete.text = "Complete"
-                    binding.ivCreateComplete.colorFilter = null
-                    it.completed = 0
-                }*/
             }
         }
 
@@ -90,7 +93,8 @@ class CreateNoteFragment : Fragment() {
                     return@setOnClickListener
                 }
                 if (binding.etCreateTitle.editText?.text.toString() == note?.title &&
-                    binding.etCreateDescription.editText?.text.toString() == note?.description) {
+                    binding.etCreateDescription.editText?.text.toString() == note?.description &&
+                    ((hasFile && selectedUri == null) || (!hasFile && selectedUri == null))) {
                     Toast.makeText(requireContext(), "Nothing to update", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
@@ -120,7 +124,29 @@ class CreateNoteFragment : Fragment() {
     }
 
     private fun updateNote(id: Int, title: String, description: String) {
-        mainViewModel.updateNote(id, title, description)
+        if (hasFile && selectedUri != null) {
+            mainViewModel.uploadFile(selectedUri!!)
+            mainViewModel.uploadFileStatus.observe(viewLifecycleOwner, { result ->
+                result?.let {
+                    when (it) {
+                        is ResultHelper.Success -> {
+                            mainViewModel.updateNote(id, title, description, it.message)
+                            mainViewModel.resetUploadFileLiveData()
+                        }
+                        is ResultHelper.Error -> {
+                            if (it.message != "Reset") {
+                                Toast.makeText(requireContext(), "File was not uploaded.", Toast.LENGTH_SHORT).show()
+                                mainViewModel.resetUploadFileLiveData()
+                            }
+                        }
+                    }
+                }
+            })
+        }
+        else {
+            mainViewModel.updateNote(id, title, description)
+        }
+
         mainViewModel.updateNoteStatus.observe(viewLifecycleOwner, { result ->
             result?.let {
                 when (it) {
@@ -128,9 +154,13 @@ class CreateNoteFragment : Fragment() {
                         Toast.makeText(requireContext(), "Note updated.", Toast.LENGTH_SHORT).show()
                         note?.title = title
                         note?.description = description
+                        mainViewModel.resetUpdateNoteLiveData()
                     }
                     is ResultHelper.Error -> {
-                        Toast.makeText(requireContext(), "Note was not updated.", Toast.LENGTH_SHORT).show()
+                        if (it.message != "Reset") {
+                            Toast.makeText(requireContext(), "Note was not updated.", Toast.LENGTH_SHORT).show()
+                            mainViewModel.resetUploadFileLiveData()
+                        }
                     }
                 }
             }
@@ -138,7 +168,25 @@ class CreateNoteFragment : Fragment() {
     }
 
     private fun createNote(title: String, description: String) {
-        mainViewModel.createNote(title, description)
+        if (hasFile && selectedUri != null) {
+            mainViewModel.uploadFile(selectedUri!!)
+            mainViewModel.uploadFileStatus.observe(viewLifecycleOwner, { result ->
+                result?.let {
+                    when (it) {
+                        is ResultHelper.Success -> {
+                            mainViewModel.createNote(title, description, it.message)
+                        }
+                        is ResultHelper.Error -> {
+                            Toast.makeText(requireContext(), "File was not uploaded.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            })
+        }
+        else {
+            mainViewModel.createNote(title, description)
+        }
+
         mainViewModel.createStatus.observe(viewLifecycleOwner, { result ->
             result?.let {
                 when (it) {
@@ -152,5 +200,17 @@ class CreateNoteFragment : Fragment() {
                 }
             }
         })
+    }
+
+    private fun getAttachment() {
+        getContent.launch("image/*")
+    }
+
+    private val getContent = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        selectedUri = uri
+        hasFile = true
+        Glide.with(requireContext()).load(uri).into(binding.ivCreateAttachment)
+        binding.llCreateAddAttachment.visibility = View.GONE
+        binding.ivCreateAttachment.visibility = View.VISIBLE
     }
 }

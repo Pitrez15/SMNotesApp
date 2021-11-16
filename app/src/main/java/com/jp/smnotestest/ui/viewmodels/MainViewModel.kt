@@ -1,29 +1,39 @@
 package com.jp.smnotestest.ui.viewmodels
 
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.ktx.storage
 import com.jp.smnotestest.api.RetrofitInstance
 import com.jp.smnotestest.models.Note
 import com.jp.smnotestest.models.NotesResponse
 import com.jp.smnotestest.utils.ResultHelper
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class MainViewModel : ViewModel() {
 
     private var firebaseAuth: FirebaseAuth? = null
     private var uid: String? = null
+    private var storage: FirebaseStorage? = null
+    private var storageReference: StorageReference? = null
 
     var loading: MutableLiveData<Boolean> = MutableLiveData()
 
     init {
         firebaseAuth = Firebase.auth
         uid = firebaseAuth?.uid
+        storage = Firebase.storage
+        storageReference = storage?.reference
     }
 
     private val _notes = MutableLiveData<ResultHelper<List<Note>>>()
@@ -52,15 +62,54 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    private val _createStatus = MutableLiveData<ResultHelper<String>>()
-    val createStatus: LiveData<ResultHelper<String>> = _createStatus
-    fun createNote(title: String, description: String) {
+    private val _uploadFileStatus = MutableLiveData<ResultHelper<String>>()
+    val uploadFileStatus: LiveData<ResultHelper<String>> = _uploadFileStatus
+    fun uploadFile(uri: Uri) {
         loading.postValue(true)
         viewModelScope.launch {
             try {
-                uid?.let {
+                var url: Task<Uri>? = null
+                val fileRef = storageReference?.child("images/${uri.lastPathSegment}_${System.currentTimeMillis()}")
+                val uploadTask = fileRef?.putFile(uri)
+                val urlTask = uploadTask?.continueWithTask { task ->
+                    if (!task.isSuccessful) {
+                        Log.d("notes", "file upload failed: ${task.exception}")
+                        _createStatus.postValue(ResultHelper.Error("File upload failed"))
+                    }
+                    url = fileRef.downloadUrl
+                    fileRef.downloadUrl
+                }?.addOnCompleteListener { task ->
+                    if (!task.isSuccessful) {
+                        Log.d("notes", "file upload failed: ${task.exception}")
+                        _createStatus.postValue(ResultHelper.Error("File upload failed"))
+                    }
+                    else {
+                        Log.d("notes", "file upload: ${task.result}")
+                        _uploadFileStatus.postValue(ResultHelper.Success("${task.result}"))
+                    }
+                    loading.postValue(false)
+                }
+            }
+            catch (e: Exception) {
+                loading.postValue(false)
+                _createStatus.postValue(ResultHelper.Error("upload file exception: ${e.message}"))
+                Log.d("notes", e.toString())
+            }
+        }
+    }
+    fun resetUploadFileLiveData(){
+        _uploadFileStatus.postValue(ResultHelper.Error("Reset"))
+    }
+
+    private val _createStatus = MutableLiveData<ResultHelper<String>>()
+    val createStatus: LiveData<ResultHelper<String>> = _createStatus
+    fun createNote(title: String, description: String, url: String? = null) {
+        loading.postValue(true)
+        viewModelScope.launch {
+            try {
+                uid?.let { uid ->
                     val response = RetrofitInstance.api.createNote(
-                        mapOf("title" to title, "description" to description, "user_id" to it)
+                        mapOf("title" to title, "description" to description, "user_id" to uid, "attachment" to url)
                     )
                     if (!response.isSuccessful) {
                         Log.d("notes", "create note unsuccessful: ${response.code()}")
@@ -108,16 +157,19 @@ class MainViewModel : ViewModel() {
             }
         }
     }
+    fun resetDeleteNoteLiveData(){
+        _deleteNoteStatus.postValue(ResultHelper.Error("Reset"))
+    }
 
     private val _updateNoteStatus = MutableLiveData<ResultHelper<String>>()
     val updateNoteStatus: LiveData<ResultHelper<String>> = _updateNoteStatus
-    fun updateNote(id: Int, title: String, description: String) {
+    fun updateNote(id: Int, title: String, description: String, url: String? = null) {
         loading.postValue(true)
         viewModelScope.launch {
             try {
                 val response = RetrofitInstance.api.updateNote(
                     id,
-                    mapOf("title" to title, "description" to description)
+                    mapOf("title" to title, "description" to description, "attachment" to url)
                 )
                 if (!response.isSuccessful) {
                     Log.d("notes", "update note unsuccessful: ${response.code()}")
@@ -134,6 +186,9 @@ class MainViewModel : ViewModel() {
                 Log.d("notes", e.toString())
             }
         }
+    }
+    fun resetUpdateNoteLiveData(){
+        _updateNoteStatus.postValue(ResultHelper.Error("Reset"))
     }
 
     /*val notesCompleted: MutableLiveData<List<Note>> = MutableLiveData()
