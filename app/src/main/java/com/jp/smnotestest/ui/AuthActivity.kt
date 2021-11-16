@@ -14,7 +14,6 @@ import com.jp.smnotestest.ui.viewmodels.AuthViewModel
 class AuthActivity : AppCompatActivity() {
 
     lateinit var binding: ActivityAuthBinding
-    val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

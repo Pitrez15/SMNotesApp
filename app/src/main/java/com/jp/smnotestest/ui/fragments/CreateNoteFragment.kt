@@ -102,7 +102,8 @@ class CreateNoteFragment : Fragment() {
                 updateNote(
                     note?.id!!,
                     binding.etCreateTitle.editText?.text.toString(),
-                    binding.etCreateDescription.editText?.text.toString()
+                    binding.etCreateDescription.editText?.text.toString(),
+                    note?.attachment
                 )
             }
             else {
@@ -123,7 +124,7 @@ class CreateNoteFragment : Fragment() {
         }
     }
 
-    private fun updateNote(id: Int, title: String, description: String) {
+    private fun updateNote(id: Int, title: String, description: String, url: String?) {
         if (hasFile && selectedUri != null) {
             mainViewModel.uploadFile(selectedUri!!)
             mainViewModel.uploadFileStatus.observe(viewLifecycleOwner, { result ->
@@ -144,7 +145,7 @@ class CreateNoteFragment : Fragment() {
             })
         }
         else {
-            mainViewModel.updateNote(id, title, description)
+            mainViewModel.updateNote(id, title, description, url)
         }
 
         mainViewModel.updateNoteStatus.observe(viewLifecycleOwner, { result ->

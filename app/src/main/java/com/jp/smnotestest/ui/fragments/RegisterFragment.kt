@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import androidx.navigation.fragment.findNavController
 import com.jp.smnotestest.R
 import com.jp.smnotestest.databinding.FragmentLoginBinding
 import com.jp.smnotestest.databinding.FragmentRegisterBinding
@@ -56,21 +57,20 @@ class RegisterFragment : Fragment() {
 
             register(
                 binding.etRegisterEmail.editText?.text.toString(),
-                binding.etRegisterPassword.editText?.text.toString()
+                binding.etRegisterPassword.editText?.text.toString(),
+                binding.etRegisterName.editText?.text.toString()
             )
         }
     }
 
-    private fun register(email: String, password: String) {
-        authViewModel.register(email, password)
+    private fun register(email: String, password: String, name: String) {
+        authViewModel.register(email, password, name)
         authViewModel.registrationStatus.observe(viewLifecycleOwner, { result ->
             result?.let {
                 when (it) {
                     is ResultHelper.Success -> {
                         Toast.makeText(requireContext(), "Registration Completed.", Toast.LENGTH_SHORT).show()
-                        val intent = Intent(requireContext(), MainActivity::class.java)
-                        startActivity(intent)
-                        activity?.finish()
+                        findNavController().navigate(R.id.action_registerFragment_to_loginFragment)
                     }
                     is ResultHelper.Error -> {
                         Toast.makeText(requireContext(), "Registration Failed.", Toast.LENGTH_SHORT).show()

@@ -1,25 +1,19 @@
 package com.jp.smnotestest.ui.viewmodels
 
+import android.app.Application
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
+import androidx.lifecycle.*
+import com.jp.smnotestest.api.RetrofitInstance
 import com.jp.smnotestest.utils.ResultHelper
+import com.jp.smnotestest.utils.SessionManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class AuthViewModel: ViewModel() {
+class AuthViewModel(application: Application): AndroidViewModel(application) {
 
-    private var firebaseAuth: FirebaseAuth? = null
+    private val context = getApplication<Application>().applicationContext
+
     var loading: MutableLiveData<Boolean> = MutableLiveData()
-
-    init {
-        firebaseAuth = Firebase.auth
-    }
 
     private val _loggedInStatus = MutableLiveData<ResultHelper<String>>()
     val loggedInStatus: LiveData<ResultHelper<String>> = _loggedInStatus
@@ -28,12 +22,21 @@ class AuthViewModel: ViewModel() {
         viewModelScope.launch {
             delay(2000L)
             try {
-                firebaseAuth?.currentUser?.let {
-                    Log.d("auth", "user logged")
-                    _loggedInStatus.postValue(ResultHelper.Success("User Logged"))
-                }?:run {
+                val token = SessionManager(context).getToken()
+                if (token.isNullOrEmpty()) {
                     Log.d("auth", "user not logged")
                     _loggedInStatus.postValue(ResultHelper.Error("User Not Logged"))
+                }
+                else {
+                    val expiresIn = SessionManager(context).getExpiresIn()
+                    if (expiresIn == 0L || expiresIn <= System.currentTimeMillis()) {
+                        Log.d("auth", "user not logged")
+                        _loggedInStatus.postValue(ResultHelper.Error("User Not Logged"))
+                    }
+                    else {
+                        Log.d("auth", "user logged")
+                        _loggedInStatus.postValue(ResultHelper.Success("User Logged"))
+                    }
                 }
                 loading.postValue(false)
             }
@@ -51,24 +54,25 @@ class AuthViewModel: ViewModel() {
         loading.postValue(true)
         viewModelScope.launch() {
             try {
-                firebaseAuth?.let { login->
-                    login.signInWithEmailAndPassword(email,password)
-                        .addOnCompleteListener {
-                            if (!it.isSuccessful) {
-                                Log.d("auth", "login Unsuccessful: ${it.exception}")
-                                _signInStatus.postValue(ResultHelper.Error("Login Failed with ${it.exception}"))
-                            }
-                            else {
-                                _signInStatus.postValue(ResultHelper.Success("Login Successful"))
-                            }
-                            loading.postValue(false)
-                        }
+                val response = RetrofitInstance().getAuthApiInstance(context).login(
+                    mapOf("email" to email, "password" to password)
+                )
+                if (!response.isSuccessful) {
+                    Log.d("auth", "login Unsuccessful: ${response.body()?.errorCode}")
+                    _signInStatus.postValue(ResultHelper.Error("Login Failed with ${response.body()?.errorCode}"))
                 }
+                else {
+                    _signInStatus.postValue(ResultHelper.Success("Login Successful"))
+                    SessionManager(context).saveSession(
+                        response.body()?.extra!!
+                    )
+                }
+                loading.postValue(false)
             }
             catch (e:Exception) {
                 loading.postValue(false)
                 _signInStatus.postValue(ResultHelper.Error("Login Failed with ${e.message}"))
-                Log.d("auth", "login Unsuccessful: ${e.message}")
+                Log.d("auth", "login Unsuccessful: $e")
             }
         }
     }
@@ -78,23 +82,21 @@ class AuthViewModel: ViewModel() {
 
     private val _registrationStatus = MutableLiveData<ResultHelper<String>>()
     val registrationStatus: LiveData<ResultHelper<String>> = _registrationStatus
-    fun register(email: String, password: String) {
+    fun register(email: String, password: String, name: String) {
         loading.postValue(true)
         viewModelScope.launch() {
             try {
-                firebaseAuth?.let { authentication ->
-                    authentication.createUserWithEmailAndPassword(email,password)
-                        .addOnCompleteListener {
-                            if (!it.isSuccessful) {
-                                Log.d("auth", "Registration Unsuccessful: ${it.exception}")
-                                _registrationStatus.postValue(ResultHelper.Error("Registration Failed with ${it.exception}"))
-                            }
-                            else {
-                                _registrationStatus.postValue(ResultHelper.Success("User Created"))
-                            }
-                            loading.postValue(false)
-                        }
+                val response = RetrofitInstance().getAuthApiInstance(context).register(
+                    mapOf("email" to email, "password" to password, "name" to name)
+                )
+                if (!response.isSuccessful) {
+                    Log.d("auth", "Registration Unsuccessful: ${response.body()?.errorCode}")
+                    _registrationStatus.postValue(ResultHelper.Error("Registration Failed with ${response.body()?.errorCode}"))
                 }
+                else {
+                    _registrationStatus.postValue(ResultHelper.Success("User Created"))
+                }
+                loading.postValue(false)
             }
             catch (e:Exception) {
                 loading.postValue(false)
@@ -110,12 +112,9 @@ class AuthViewModel: ViewModel() {
         loading.postValue(true)
         viewModelScope.launch() {
             try {
-                firebaseAuth?.let {authentication ->
-                    authentication.signOut()
-                    _signOutStatus.postValue(ResultHelper.Success("SignOut Successful"))
-                    loading.postValue(false)
-                }
-
+                SessionManager(context).finishSession()
+                _signOutStatus.postValue(ResultHelper.Success("SignOut Successful"))
+                loading.postValue(false)
             }
             catch (e:Exception){
                 loading.postValue(false)

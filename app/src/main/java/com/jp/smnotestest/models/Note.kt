@@ -14,6 +14,6 @@ data class Note(
     var completed: Int,
     var saved: Int,
     var deleted: Int,
-    @SerializedName("user_id") var userId: String?,
+    @SerializedName("user_id") var userId: Int?,
     var attachment: String?
 ): Parcelable

@@ -19,8 +19,7 @@ import com.jp.smnotestest.utils.ResultHelper
 class MainActivity : AppCompatActivity() {
 
     lateinit var binding: ActivityMainBinding
-    val authViewModel: AuthViewModel by viewModels()
-    val mainViewModel: MainViewModel by viewModels()
+    private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

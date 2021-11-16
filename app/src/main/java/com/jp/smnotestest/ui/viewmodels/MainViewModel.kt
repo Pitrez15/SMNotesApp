@@ -1,11 +1,9 @@
 package com.jp.smnotestest.ui.viewmodels
 
+import android.app.Application
 import android.net.Uri
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -15,23 +13,20 @@ import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import com.jp.smnotestest.api.RetrofitInstance
 import com.jp.smnotestest.models.Note
-import com.jp.smnotestest.models.NotesResponse
 import com.jp.smnotestest.utils.ResultHelper
+import com.jp.smnotestest.utils.SessionManager
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
-class MainViewModel : ViewModel() {
+class MainViewModel(application: Application) : AndroidViewModel(application) {
 
-    private var firebaseAuth: FirebaseAuth? = null
-    private var uid: String? = null
+    private val context = getApplication<Application>().applicationContext
+
     private var storage: FirebaseStorage? = null
     private var storageReference: StorageReference? = null
 
     var loading: MutableLiveData<Boolean> = MutableLiveData()
 
     init {
-        firebaseAuth = Firebase.auth
-        uid = firebaseAuth?.uid
         storage = Firebase.storage
         storageReference = storage?.reference
     }
@@ -42,8 +37,9 @@ class MainViewModel : ViewModel() {
         loading.postValue(true)
         viewModelScope.launch {
             try {
-                uid?.let {
-                    val response = RetrofitInstance.api.getNotes(it)
+                val userId = SessionManager(context).getUserId()
+                if (userId != 0) {
+                    val response = RetrofitInstance().getNotesApiInstance(context).getNotes(userId)
                     if (!response.isSuccessful) {
                         Log.d("notes", "get notes unsuccessful: ${response.code()}")
                         _notes.postValue(ResultHelper.Error("Notes failed"))
@@ -68,7 +64,6 @@ class MainViewModel : ViewModel() {
         loading.postValue(true)
         viewModelScope.launch {
             try {
-                var url: Task<Uri>? = null
                 val fileRef = storageReference?.child("images/${uri.lastPathSegment}_${System.currentTimeMillis()}")
                 val uploadTask = fileRef?.putFile(uri)
                 val urlTask = uploadTask?.continueWithTask { task ->
@@ -76,7 +71,6 @@ class MainViewModel : ViewModel() {
                         Log.d("notes", "file upload failed: ${task.exception}")
                         _createStatus.postValue(ResultHelper.Error("File upload failed"))
                     }
-                    url = fileRef.downloadUrl
                     fileRef.downloadUrl
                 }?.addOnCompleteListener { task ->
                     if (!task.isSuccessful) {
@@ -107,9 +101,10 @@ class MainViewModel : ViewModel() {
         loading.postValue(true)
         viewModelScope.launch {
             try {
-                uid?.let { uid ->
-                    val response = RetrofitInstance.api.createNote(
-                        mapOf("title" to title, "description" to description, "user_id" to uid, "attachment" to url)
+                val userId = SessionManager(context).getUserId()
+                if (userId != 0) {
+                    val response = RetrofitInstance().getNotesApiInstance(context).createNote(
+                        mapOf("title" to title, "description" to description, "user_id" to userId.toString(), "attachment" to url)
                     )
                     if (!response.isSuccessful) {
                         Log.d("notes", "create note unsuccessful: ${response.code()}")
@@ -135,7 +130,7 @@ class MainViewModel : ViewModel() {
         loading.postValue(true)
         viewModelScope.launch {
             try {
-                val response = RetrofitInstance.api.deleteNote(note.id!!)
+                val response = RetrofitInstance().getNotesApiInstance(context).deleteNote(note.id!!)
                 if (!response.isSuccessful) {
                     Log.d("notes", "delete note unsuccessful: ${response.code()}")
                     _deleteNoteStatus.postValue(ResultHelper.Error("Delete Note Failed"))
@@ -167,7 +162,7 @@ class MainViewModel : ViewModel() {
         loading.postValue(true)
         viewModelScope.launch {
             try {
-                val response = RetrofitInstance.api.updateNote(
+                val response = RetrofitInstance().getNotesApiInstance(context).updateNote(
                     id,
                     mapOf("title" to title, "description" to description, "attachment" to url)
                 )
@@ -190,53 +185,4 @@ class MainViewModel : ViewModel() {
     fun resetUpdateNoteLiveData(){
         _updateNoteStatus.postValue(ResultHelper.Error("Reset"))
     }
-
-    /*val notesCompleted: MutableLiveData<List<Note>> = MutableLiveData()
-    private var notesCompletedResponse: NotesResponse? = null*/
-
-    /*fun getCompletedNotes() = viewModelScope.launch {
-        try {
-            val response = RetrofitInstance.api.getCompletedNotes(uid)
-            if (response.isSuccessful) {
-                response.body()?.let {
-                    notesCompletedResponse = it
-                    notesCompleted.postValue(notesCompletedResponse?.result)
-                }
-            }
-        }
-        catch (e: Exception) {
-            Log.d("exception", e.toString())
-        }
-    }*/
-
-    /*fun completeNote(note: Note) = viewModelScope.launch {
-    if (note.completed == 0) {
-        try {
-            val response = RetrofitInstance.api.completeNote(note.id!!, mapOf("bool" to true))
-            if (response.isSuccessful) {
-                response.body()?.let { _ ->
-                    notesResponse?.result?.find { it -> it.id == note.id }?.completed = 1
-                    notes.postValue(notesResponse?.result)
-                }
-            }
-        }
-        catch (e: Exception) {
-            Log.d("exception", e.toString())
-        }
-    }
-    else {
-        try {
-            val response = RetrofitInstance.api.completeNote(note.id!!, mapOf("bool" to false))
-            if (response.isSuccessful) {
-                response.body()?.let { _ ->
-                    notesResponse?.result?.find { it -> it.id == note.id }?.completed = 0
-                    notes.postValue(notesResponse?.result)
-                }
-            }
-        }
-        catch (e: Exception) {
-            Log.d("exception", e.toString())
-        }
-    }
-}*/
 }
