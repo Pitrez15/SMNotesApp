@@ -1,14 +1,8 @@
 
 ?
 settings.gradle,0\5\05efc8b1657769a27696d478ded1e95f38737233
-m
-=app/src/main/java/com/jp/smnotestest/adapters/NotesAdapter.kt,0\8\082cd83b0cc47f40146244393cccdc41665827df
 j
 :app/src/main/java/com/jp/smnotestest/utils/ResultHelper.kt,5\f\5f58244d74db64500e96f8b86e752d36aaf2d45e
-j
-:app/src/main/java/com/jp/smnotestest/utils/NoteListener.kt,9\e\9e4efed62bdc23fb0bc1013ee4950a797f646c50
-r
-Bapp/src/main/java/com/jp/smnotestest/ui/fragments/NotesFragment.kt,3\1\315f75cc63db84c18b66098d2a83f5ecb9070594
 v
 Fapp/src/main/java/com/jp/smnotestest/ui/fragments/CompletedFragment.kt,1\b\1bb32389df16e4067e3c13d4237b466e40bb8c3b
 <

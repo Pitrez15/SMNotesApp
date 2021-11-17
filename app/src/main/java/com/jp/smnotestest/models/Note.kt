@@ -1,12 +1,15 @@
 package com.jp.smnotestest.models
 
 import android.os.Parcelable
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
+@Entity(tableName = "note")
 data class Note(
-    var id: Int?,
+    @PrimaryKey(autoGenerate = false) var id: Int?,
     @SerializedName("created_at") var createdAt: String?,
     @SerializedName("updated_at") var updatedAt: String?,
     var title: String,

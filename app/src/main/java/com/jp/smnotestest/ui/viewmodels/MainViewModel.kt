@@ -12,6 +12,7 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import com.jp.smnotestest.api.RetrofitInstance
+import com.jp.smnotestest.db.NoteDatabase
 import com.jp.smnotestest.models.Note
 import com.jp.smnotestest.utils.ResultHelper
 import com.jp.smnotestest.utils.SessionManager
@@ -39,23 +40,37 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val userId = SessionManager(context).getUserId()
                 if (userId != 0) {
-                    val response = RetrofitInstance().getNotesApiInstance(context).getNotes(userId)
-                    if (!response.isSuccessful) {
-                        Log.d("notes", "get notes unsuccessful: ${response.code()}")
-                        _notes.postValue(ResultHelper.Error("Notes failed"))
-                    }
-                    else {
-                        _notes.postValue(ResultHelper.Success("Notes", response.body()?.result))
-                    }
-                    loading.postValue(false)
+                    getLocalNotes(userId)
+                    getRemoteNotes(userId)
                 }
             }
             catch (e: Exception) {
                 loading.postValue(false)
-                _notes.postValue(ResultHelper.Error("Get notes exception: ${e.message}"))
+                //_notes.postValue(ResultHelper.Error("Get notes exception: ${e.message}"))
                 Log.d("notes", e.toString())
             }
         }
+    }
+
+    private suspend fun getLocalNotes(id: Int) {
+        val result = NoteDatabase.invoke(context).getNoteDao().getNotesByUser(id)
+        result?.let {
+            Log.d("notes", it.toString())
+            _notes.postValue(ResultHelper.Success("Cached notes", it))
+        }
+    }
+
+    private suspend fun getRemoteNotes(id: Int) {
+        val response = RetrofitInstance().getNotesApiInstance(context).getNotes(id)
+        if (!response.isSuccessful) {
+            Log.d("notes", "get notes unsuccessful: ${response.code()}")
+            //_notes.postValue(ResultHelper.Error("Notes failed"))
+        }
+        else {
+            NoteDatabase.invoke(context).getNoteDao().addAllNotes(response.body()?.result!!.toList())
+            _notes.postValue(ResultHelper.Success("Notes", response.body()?.result))
+        }
+        loading.postValue(false)
     }
 
     private val _uploadFileStatus = MutableLiveData<ResultHelper<String>>()
@@ -154,6 +169,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun resetDeleteNoteLiveData(){
         _deleteNoteStatus.postValue(ResultHelper.Error("Reset"))
+    }
+
+    private suspend fun deleteLocal(id: Int) {
+        NoteDatabase.invoke(context).getNoteDao().softDeleteNote(id)
+        _notes.value?.data?.find { it -> it.id == id }?.deleted = 1
+        _notes.postValue(ResultHelper.Success(
+            "Notes list updated",
+            _notes.value?.data
+        ))
+        Log.d("notes", "deleted")
     }
 
     private val _updateNoteStatus = MutableLiveData<ResultHelper<String>>()

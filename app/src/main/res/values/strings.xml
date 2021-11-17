@@ -2,4 +2,20 @@
     <string name="app_name">SMNotesTest</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="no_completed_notes_to_display">No Completed Notes To Display</string>
+    <string name="title">Title</string>
+    <string name="note_description">Note Description</string>
+    <string name="add_image">Add Image</string>
+    <string name="create_on">Create on:</string>
+    <string name="dd_mm_yyyy">dd-mm-yyyy</string>
+    <string name="share">Share</string>
+    <string name="create_note">Create Note</string>
+    <string name="notes">Notes</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="login">Login</string>
+    <string name="no_notes_to_display">No Notes To Display</string>
+    <string name="name">Name</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="register">Register</string>
 </resources>
